@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"net"
 
+	"github.com/codingconcepts/env"
 	"github.com/go-redis/redis/v8"
-	"github.com/vengeancegpd/tgbot/pkg/util"
+	"github.com/vengeancegod/tgbot/pkg/util"
 )
 
 type RedisConfig struct {
