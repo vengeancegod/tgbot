@@ -1,38 +1,47 @@
-package main
+package bot
 
 import (
-	"context"
 	"log"
+	"time"
 
-	"github.com/go-redis/redis/v8"
-
+	"github.com/codingconcepts/env"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/joho/godotenv"
 )
 
-func main() {
+const defaultEnvFile = ".env"
 
-	var ctx = context.Background()
+type BotConfig struct {
+	// Telegram bot token
+	TelegramBotToken string `env:"TELEGRAM_BOT_TOKEN" required:"true"`
 
-	bd := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "eqgadya6YZAKY9alFQmDJzAKnfaQYL750WayS3HFT9k",
-		DB:       0,
-	})
-	_, err := bd.Ping(ctx).Result()
+	// YaGPT API key
+	YandexGPTAPIKey string `env:"YANDEXGPT_API_KEY" required:"true"`
+
+	// // whitelist (chat ID)
+	// BotWhitelist []int64 `env:"BOT_WHITELIST"`
+}
+
+func Execute() {
+	err := godotenv.Load(defaultEnvFile)
 	if err != nil {
-		log.Fatalf("Ошибка подключения: %v", err)
+		log.Printf("Не удалось загрузить файл .env: %+v", err)
 	}
-	defer bd.Close()
 
-	bot, err := tgbotapi.NewBotAPI("7107332481:AAEFNrF_bJp6jCmy8qMPji9y68svJ-R4MD8")
+	var config BotConfig
+	if err := env.Set(&config); err != nil {
+		log.Fatalf("Ошибка настройки окружения: %v", err)
+	}
+
+	bot, err := tgbotapi.NewBotAPI(config.TelegramBotToken)
 	if err != nil {
 		log.Panic(err)
 	}
 	bot.Debug = true
-	log.Printf("Authorized %s", bot.Self.UserName)
+	log.Printf("Авторизован как %s", bot.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
+	u.Timeout = int(10 * time.Second)
 
 	updates := bot.GetUpdatesChan(u)
 
@@ -44,22 +53,29 @@ func main() {
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "start":
-				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите команду")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите действие")
 				msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
 					tgbotapi.NewKeyboardButtonRow(
 						tgbotapi.NewKeyboardButton("Задать вопрос"),
-						tgbotapi.NewKeyboardButton("Зарегистрировать обращение"),
+						tgbotapi.NewKeyboardButton("Создать обращение"),
 					),
 				)
 				bot.Send(msg)
+			case "help":
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Список доступных команд: /start, /help")
+				bot.Send(msg)
 			default:
-				continue
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Неизвестная команда. Введите /help для списка команд.")
+				bot.Send(msg)
 			}
 		} else if update.Message.Text == "Задать вопрос" {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите интересующий вас вопрос:")
 			bot.Send(msg)
-		} else if update.Message.Text == "Зарегистрировать обращение" {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Уточните детали вашего обращения")
+		} else if update.Message.Text == "Создать обращение" {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Уточните детали вашего обращения:")
+			bot.Send(msg)
+		} else {
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Неизвестная команда или текст. Введите /help для списка команд.")
 			bot.Send(msg)
 		}
 	}
