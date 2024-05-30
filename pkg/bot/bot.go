@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -75,7 +76,15 @@ func Execute() {
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Уточните детали вашего обращения:")
 			bot.Send(msg)
 		} else {
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Неизвестная команда или текст. Введите /help для списка команд.")
+			// Предполагаем, что любой другой текст - это вопрос.
+			question := update.Message.Text
+			answer, err := getYandexGPTResponse(config.YandexGPTAPIKey, question)
+			if err != nil {
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка при обращении к API: %v", err))
+				bot.Send(msg)
+				continue
+			}
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, answer)
 			bot.Send(msg)
 		}
 	}

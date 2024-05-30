@@ -52,7 +52,7 @@ func (s *RedisStore) Load(key, value interface{}) error {
 }
 
 func (s *RedisStore) Save(key, value interface{}) error {
-	defer util.Timer("redis store save")()
+	defer util.Timer("Хранилище сохранено")()
 	data, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -61,6 +61,6 @@ func (s *RedisStore) Save(key, value interface{}) error {
 }
 
 func (s *RedisStore) Delete(key interface{}) error {
-	defer util.Timer("redis store save")()
+	defer util.Timer("Хранилище сохранено")()
 	return s.redis.Del(context.Background(), s.insertNamespace(key)).Err()
 }
