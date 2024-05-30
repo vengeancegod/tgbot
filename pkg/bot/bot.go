@@ -78,7 +78,7 @@ func Execute() {
 		} else {
 			// Предполагаем, что любой другой текст - это вопрос.
 			question := update.Message.Text
-			answer, err := getYandexGPTResponse(config.YandexGPTAPIKey, question)
+			answer, err := GetYandexGPTResponse(config.YandexGPTAPIKey, question)
 			if err != nil {
 				msg := tgbotapi.NewMessage(update.Message.Chat.ID, fmt.Sprintf("Ошибка при обращении к API: %v", err))
 				bot.Send(msg)

@@ -28,7 +28,7 @@ type YandexGPTResponse struct {
 	Text string `json:"text"`
 }
 
-func getYandexGPTResponse() {
+func GetYandexGPTResponse() {
 	requestBody := YandexGPTRequest{
 		Model:          "general",
 		InstructionURI: "ds://bt120djph01n8cr7ct2l",
